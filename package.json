@@ -1,0 +1,21 @@
+{
+  "name": "repvault-backend-ai",
+  "packageManager": "yarn@4.3.1",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "dev": "tsc -w",
+    "start": "yarn build && node dist/index.js"
+  },
+  "dependencies": {
+    "aws-lambda": "^1.0.7",
+    "aws-sdk": "^2.1692.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.147",
+    "@types/node": "^22.13.4",
+    "copyfiles": "^2.4.1",
+    "typescript": "^5.7.3"
+  }
+}
