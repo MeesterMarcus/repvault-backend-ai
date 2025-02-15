@@ -1,6 +1,5 @@
 /* global fetch */
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import fetch from 'node-fetch';
 import * as AWS from 'aws-sdk';
 
 const secretsManager = new AWS.SecretsManager();
