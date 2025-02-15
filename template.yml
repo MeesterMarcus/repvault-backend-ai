@@ -8,9 +8,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: aiGeneratorFunction
-      Handler: dist/index.handler
+      Handler: index.handler
       Runtime: nodejs18.x
-      CodeUri: ./dist/
+      CodeUri: .
       MemorySize: 256
       Timeout: 30
       Policies:
@@ -24,6 +24,11 @@ Resources:
       Environment:
         Variables:
           GEMINI_API_URL: "https://api.gemini.com/flash"
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoint: src/index.ts
+        Bundle: true
 
   MyHttpApi:
     Type: AWS::Serverless::HttpApi
@@ -56,4 +61,3 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyHttpApi}/*
-

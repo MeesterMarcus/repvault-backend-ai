@@ -31,7 +31,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    console.log('bop it');
+    console.log('bop itt');
 
     const apiKey = await getGeminiApiKey();
 
