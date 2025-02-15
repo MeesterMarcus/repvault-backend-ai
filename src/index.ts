@@ -6,7 +6,7 @@ import { predefinedExercises } from "./constants";
 const BASE_PROMPT = `Prior to generating your output, please ensure that you return back data that only exists within this set:\n
 ${JSON.stringify(predefinedExercises)} \n
 \n
-Now based on the following prompt, construct back an array of exercises that fits the my needs: \n
+Now based on the following prompt, construct back an array of exercises that fits my needs: \n
 `
 const secretsClient = new SecretsManagerClient({ region: "us-east-1" });
 const SECRET_ID = "prod/repvault-backend-ai/gemini-key";
