@@ -4,7 +4,7 @@ Description: >
   Lambda for interacting with AI
 
 Resources:
-  S3LambdaFunction:
+  AiGeneratorFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: aiGeneratorFunction
@@ -31,7 +31,7 @@ Resources:
         EnableIamAuthorizer: false
       CorsConfiguration:
         AllowMethods:
-          - GET
+          - POST
           - OPTIONS
         AllowOrigins:
           - "*"
@@ -41,20 +41,20 @@ Resources:
           title: MyLambdaAPI
           version: '1.0'
         paths:
-          /:
-            get:
+          /generate:
+            post:
               x-amazon-apigateway-integration:
                 uri:
-                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${S3LambdaFunction.Arn}/invocations
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AiGeneratorFunction.Arn}/invocations
                 httpMethod: POST
                 type: aws_proxy
               security:
                 - sigv4: []
 
-  S3LambdaFunctionPermission:
+  AiGeneratorFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !Ref S3LambdaFunction
+      FunctionName: !Ref AiGeneratorFunction
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyHttpApi}/*"
