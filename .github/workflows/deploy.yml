@@ -12,10 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Debug: List repository files to verify the location of template.yml and tsconfig.json
-      - name: List repository files
-        run: ls -la
-
       - name: Setup Python 3.11
         uses: actions/setup-python@v4
         with:
@@ -31,21 +27,15 @@ jobs:
           && pip3 install --no-build-isolation "Cython<3" "pyyaml==5.4.1" \
           && pip3 install --upgrade --no-cache-dir aws-sam-cli
 
-      # Install Node.js dependencies using Npm
       - name: Install Node.js dependencies
         run: npm install
 
-      # Build TypeScript code (compile src/ into dist/)
-      - name: Build TypeScript code
-        run: npm run build
-
-      # Build SAM Application (ensure template.yml points to compiled code, e.g., dist/index.handler)
       - name: Build SAM Application
-        run: sam build --template-file template.yml
+        run: sam build
 
       - name: Deploy SAM Application
         run: |
-          sam deploy --template-file template.yml --resolve-s3 --no-confirm-changeset --stack-name repvaultBackendAi --capabilities CAPABILITY_IAM --region us-east-1
+          sam deploy --resolve-s3 --no-confirm-changeset --stack-name repvaultBackendAi --capabilities CAPABILITY_IAM --region us-east-1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

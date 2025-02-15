@@ -8,9 +8,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: aiGeneratorFunction
-      Handler: dist/index.handler
+      Handler: index.handler  # Changed from dist/index.handler
       Runtime: nodejs18.x
-      CodeUri: ./dist/
+      CodeUri: ./src/  # Changed from ./dist/
       MemorySize: 256
       Timeout: 30
       Policies:
@@ -27,7 +27,7 @@ Resources:
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
-        EntryPoint: src/index.ts
+        EntryPoint: index.ts  # Changed from src/index.ts
         Bundle: true
 
   MyHttpApi:
