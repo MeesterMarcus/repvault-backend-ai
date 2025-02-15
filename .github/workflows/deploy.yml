@@ -12,6 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+
       - name: Setup Python 3.11
         uses: actions/setup-python@v4
         with:
@@ -21,14 +26,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel
 
-      - name: Install SAM CLI with workaround for PyYAML
+      - name: Install SAM CLI with workaround
         run: |
           pip3 install wheel \
           && pip3 install --no-build-isolation "Cython<3" "pyyaml==5.4.1" \
           && pip3 install --upgrade --no-cache-dir aws-sam-cli
 
-      - name: Install Node.js dependencies
-        run: npm install
+      - name: Install project dependencies
+        run: npm ci # Using npm ci for clean install
+
+      # Add explicit esbuild installation step
+      - name: Install esbuild
+        run: npm install -g esbuild
 
       - name: Build SAM Application
         run: sam build
