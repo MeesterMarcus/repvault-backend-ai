@@ -2,20 +2,30 @@ import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-sec
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { predefinedExercises } from "./constants";
 
+const BASE_PROMPT = `
+Prior to generating your output, please ensure that you return back data 
+that only exists within this set of data and also populate 3 set objects 
+for each exercise with default reps of 10 and weight to your recommendation 
+as a beginner (both integer values). Also ensure there are 5 exercises total 
+unless otherwise specified:
 
-const BASE_PROMPT = `Prior to generating your output, please ensure that you return back data that only exists within this set of data and also populate 3 set objects for each exercise with default reps of 10 and weight to your recommendation as a beginner. Also ensure there are 5 exercises total unless otherwise specified:\n
-${JSON.stringify(predefinedExercises)} \n
-\n
-Now based on the following prompt, construct back an array of exercises that fits my needs: \n
-`
+${JSON.stringify(predefinedExercises, null, 2)}
+
+Now based on the following prompt, construct back an array of exercises 
+that fits my needs:
+`;
+
 const secretsClient = new SecretsManagerClient({ region: "us-east-1" });
 const SECRET_ID = "prod/repvault-backend-ai/gemini-key";
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const handler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
   try {
     const body = event.body ? JSON.parse(event.body) : {};
     const prompt = `${BASE_PROMPT}${body.prompt}`;
+
     if (!prompt) {
       return {
         statusCode: 400,
@@ -33,7 +43,6 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     const secretObject = JSON.parse(secretResponse.SecretString);
     const apiKey = secretObject.GeminiApiKeySecret;
-
     const url = `${GEMINI_BASE_URL}?key=${encodeURIComponent(apiKey)}`;
 
     const response = await fetch(url, {
