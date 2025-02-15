@@ -26,18 +26,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel
 
-      - name: Install SAM CLI with workaround
+      - name: Install SAM CLI with workaround for PyYAML
         run: |
           pip3 install wheel \
           && pip3 install --no-build-isolation "Cython<3" "pyyaml==5.4.1" \
           && pip3 install --upgrade --no-cache-dir aws-sam-cli
 
-      - name: Install project dependencies
-        run: npm ci # Using npm ci for clean install
-
-      # Add explicit esbuild installation step
-      - name: Install esbuild
-        run: npm install -g esbuild
+      - name: Install Node.js dependencies
+        run: yarn install
 
       - name: Build SAM Application
         run: sam build
