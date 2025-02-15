@@ -3,7 +3,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { predefinedExercises } from "./constants";
 
 
-const BASE_PROMPT = `Prior to generating your output, please ensure that you return back data that only exists within this set of data and also populate set objects with default reps of 10 and weight as 0:\n
+const BASE_PROMPT = `Prior to generating your output, please ensure that you return back data that only exists within this set of data and also populate 3 set objects for each exercise with default reps of 10 and weight as 0:\n
 ${JSON.stringify(predefinedExercises)} \n
 \n
 Now based on the following prompt, construct back an array of exercises that fits my needs: \n
