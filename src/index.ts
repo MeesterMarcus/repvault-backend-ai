@@ -11,7 +11,7 @@ unless otherwise specified:
 
 ${JSON.stringify(predefinedExercises, null, 2)}
 
-Here are as well the models for reference:
+Here are as well the models for reference (use a uuid for id):
 export interface SetTemplate {
     id: string;
     reps: string;
