@@ -31,6 +31,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
+    console.log('bop it');
+
     const apiKey = await getGeminiApiKey();
 
     const response = await fetch(GEMINI_API_URL, {
