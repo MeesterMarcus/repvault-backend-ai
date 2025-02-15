@@ -1,4 +1,3 @@
-/* global fetch */
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as AWS from 'aws-sdk';
 
@@ -17,7 +16,7 @@ async function getGeminiApiKey(): Promise<string> {
   throw new Error('Unable to retrieve secret string from Secrets Manager.');
 }
 
-const GEMINI_API_URL = 'https://api.gemini.com/flash';
+const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
@@ -30,17 +29,23 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    console.log('bop itt');
-
     const apiKey = await getGeminiApiKey();
+    const url = `${GEMINI_BASE_URL}?key=${apiKey}`;
 
-    const response = await fetch(GEMINI_API_URL, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: prompt }
+            ]
+          }
+        ]
+      })
     });
 
     if (!response.ok) {
