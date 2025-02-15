@@ -19,7 +19,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (!prompt) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: "Missing prompt" }),
+        body: JSON.stringify({ message: "Missing prompt!" }),
       };
     }
 
