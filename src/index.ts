@@ -1,6 +1,13 @@
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { predefinedExercises } from "./constants";
 
+
+const BASE_PROMPT = `Prior to generating your output, please ensure that you return back data that only exists within this set:\n
+${JSON.stringify(predefinedExercises)} \n
+\n
+Now based on the following prompt, construct back an array of exercises that fits the my needs: \n
+`
 const secretsClient = new SecretsManagerClient({ region: "us-east-1" });
 const SECRET_ID = "prod/repvault-backend-ai/gemini-key";
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
@@ -8,7 +15,7 @@ const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const body = event.body ? JSON.parse(event.body) : {};
-    const prompt = body.prompt;
+    const prompt = `${BASE_PROMPT}${body.prompt}`;
     if (!prompt) {
       return {
         statusCode: 400,
