@@ -11,6 +11,24 @@ unless otherwise specified:
 
 ${JSON.stringify(predefinedExercises, null, 2)}
 
+Here are as well the models for reference:
+export interface SetTemplate {
+    id: string;
+    reps: string;
+    weight: string;
+  }
+
+export interface ExerciseTemplate {
+    id: string;
+    name: string;
+    sets: SetTemplate[];
+    category: string;
+    muscleGroup: string[];
+    equipment: string;
+    description?: string;
+    imageUri?: string;
+  }
+
 Now based on the following prompt, construct back an array of exercises 
 that fits my needs:
 `;
