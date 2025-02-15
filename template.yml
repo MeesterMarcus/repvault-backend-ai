@@ -11,8 +11,8 @@ Resources:
       Handler: dist/index.handler
       Runtime: nodejs18.x
       CodeUri: ./dist/
-      MemorySize: 128
-      Timeout: 10
+      MemorySize: 256
+      Timeout: 30
       Policies:
         - Version: "2012-10-17"
           Statement:
@@ -24,11 +24,6 @@ Resources:
       Environment:
         Variables:
           GEMINI_API_URL: "https://api.gemini.com/flash"
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        EntryPoint: index.ts  # Changed from src/index.ts
-        Bundle: true
 
   MyHttpApi:
     Type: AWS::Serverless::HttpApi
@@ -61,3 +56,4 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyHttpApi}/*
+
