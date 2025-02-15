@@ -1,51 +1,47 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import * as AWS from 'aws-sdk';
+import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
-const secretsManager = new AWS.SecretsManager();
-const SECRET_ID = 'prod/repvault-backend-ai/gemini-key';
+// AWS SDK v3 client for Secrets Manager
+const secretsClient = new SecretsManagerClient({ region: "us-east-1" });
+const SECRET_ID = "prod/repvault-backend-ai/gemini-key";
 
-let cachedApiKey: string | null = null;
-
-async function getGeminiApiKey(): Promise<string> {
-  if (cachedApiKey) return cachedApiKey;
-  const secretValue = await secretsManager.getSecretValue({ SecretId: SECRET_ID }).promise();
-  if ('SecretString' in secretValue && secretValue.SecretString) {
-    cachedApiKey = secretValue.SecretString;
-    return cachedApiKey;
-  }
-  throw new Error('Unable to retrieve secret string from Secrets Manager.');
-}
-
-const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+// Gemini API configuration
+const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const body = event.body ? JSON.parse(event.body) : {};
-    const { prompt } = body;
+    const prompt = body.prompt;
     if (!prompt) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing prompt' }),
+        body: JSON.stringify({ message: "Missing prompt" }),
       };
     }
 
-    const apiKey = await getGeminiApiKey();
-    const url = `${GEMINI_BASE_URL}?key=${apiKey}`;
+    // Retrieve API key from Secrets Manager
+    const secretResponse = await secretsClient.send(
+      new GetSecretValueCommand({ SecretId: SECRET_ID })
+    );
+    if (!secretResponse.SecretString) {
+      throw new Error("Failed to retrieve Gemini API key from Secrets Manager");
+    }
+    const apiKey = secretResponse.SecretString;
 
+    // Construct the URL with the API key as a query parameter
+    const url = `${GEMINI_BASE_URL}?key=${encodeURIComponent(apiKey)}`;
+
+    // Invoke Gemini API
     const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [
           {
-            parts: [
-              { text: prompt }
-            ]
-          }
-        ]
-      })
+            parts: [{ text: prompt }],
+          },
+        ],
+      }),
     });
 
     if (!response.ok) {
@@ -59,12 +55,17 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const result = await response.json();
     return {
       statusCode: 200,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ output: result }),
     };
   } catch (error: any) {
+    console.error("Error:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({
+        error: error.message,
+        ...(process.env.NODE_ENV === "development" && { stack: error.stack }),
+      }),
     };
   }
 };

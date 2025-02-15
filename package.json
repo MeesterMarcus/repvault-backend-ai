@@ -8,6 +8,7 @@
     "start": "yarn build && node dist/index.js"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.749.0",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
