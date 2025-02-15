@@ -40,7 +40,7 @@ jobs:
 
       - name: Deploy SAM Application
         run: |
-          sam deploy --template-file template.yml --no-confirm-changeset --stack-name s3LambdaStack --capabilities CAPABILITY_IAM --region us-east-1 --s3-bucket repvaul-ai-file-storage-s3-bucket
+          sam deploy --template-file template.yml --no-confirm-changeset --stack-name repvaultBackendAi --capabilities CAPABILITY_IAM --region us-east-1 --s3-bucket repvaul-ai-file-storage-s3-bucket
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
