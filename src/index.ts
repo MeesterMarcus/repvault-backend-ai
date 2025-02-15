@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import * as AWS from 'aws-sdk';
 
 const secretsManager = new AWS.SecretsManager();
-const SECRET_ID = 'prod/repvault-backend-ai/gemini-key'; // Name/ARN of your secret
+const SECRET_ID = 'prod/repvault-backend-ai/gemini-key';
 
 let cachedApiKey: string | null = null;
 
