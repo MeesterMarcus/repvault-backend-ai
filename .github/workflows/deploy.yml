@@ -31,13 +31,13 @@ jobs:
           && pip3 install --no-build-isolation "Cython<3" "pyyaml==5.4.1" \
           && pip3 install --upgrade --no-cache-dir aws-sam-cli
 
-      # Install Node.js dependencies using Yarn
+      # Install Node.js dependencies using Npm
       - name: Install Node.js dependencies
-        run: yarn install
+        run: npm install
 
       # Build TypeScript code (compile src/ into dist/)
       - name: Build TypeScript code
-        run: yarn build
+        run: npm run build
 
       # Build SAM Application (ensure template.yml points to compiled code, e.g., dist/index.handler)
       - name: Build SAM Application
