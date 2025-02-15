@@ -8,9 +8,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: aiGeneratorFunction
-      Handler: index.handler
+      Handler: dist/index.handler
       Runtime: nodejs18.x
-      CodeUri: .
+      CodeUri: ./dist/
       MemorySize: 256
       Timeout: 30
       Policies:
