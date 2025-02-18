@@ -74,16 +74,27 @@ export const handler = async (
         ],
       }),
     });
+    console.log("Gemini response status:", response.status);
+    const rawResponseText = await response.text();
+    console.log("Raw Gemini response text:", rawResponseText);
+    // Parse the response text after logging it
+    let result;
+    try {
+      result = JSON.parse(rawResponseText);
+    } catch (parseError) {
+      console.error("Error parsing Gemini response JSON:", parseError);
+      throw parseError;
+    }
 
     if (!response.ok) {
-      const errorText = await response.text();
       return {
         statusCode: response.status,
-        body: JSON.stringify({ error: errorText }),
+        body: JSON.stringify({ error: rawResponseText }),
       };
     }
 
-    const result = await response.json();
+    console.log("Parsed Gemini result:", result);
+
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
