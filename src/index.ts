@@ -3,20 +3,23 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { predefinedExercises } from "./constants";
 
 const BASE_PROMPT = `
-Prior to generating your output, please ensure that you return back data 
-that only exists within this set of data and also populate 3 set objects 
-for each exercise with default reps of 10 and weight to your recommendation 
-as a beginner (both integer values). Also ensure there are 5 exercises total 
-unless otherwise specified:
-
+Below is a predefined list of exercises:
 ${JSON.stringify(predefinedExercises, null, 2)}
 
-Here are as well the models for reference (use a uuid for id):
+Using only the data provided above, generate an array of exercises that meets the following requirements:
+1. Return exactly 5 exercise objects unless your instructions explicitly specify a different number.
+2. Each exercise object must be one of the predefined exercises; do not invent new exercise data.
+3. For each exercise, include exactly 3 set objects. Each set object must have:
+   - "id": a unique UUID (you may use a UUID generator),
+   - "reps": a string representing an integer, set to a recommended beginner's reps,
+   - "weight": a string representing an integer, set to a recommended beginner's weight.
+4. The output must be valid JSON and strictly conform to the following TypeScript interfaces:
+
 export interface SetTemplate {
     id: string;
     reps: string;
     weight: string;
-  }
+}
 
 export interface ExerciseTemplate {
     id: string;
@@ -27,15 +30,15 @@ export interface ExerciseTemplate {
     equipment: string;
     description?: string;
     imageUri?: string;
-  }
+}
 
-Now based on the following prompt, construct back an array of exercises 
-that fits my needs:
+Do not include any additional text or explanation in your output. 
+Now, based on the prompt below, construct and return an array of exercise objects that fits the requirements:
 `;
 
 const secretsClient = new SecretsManagerClient({ region: "us-east-1" });
 const SECRET_ID = "prod/repvault-backend-ai/gemini-key";
-const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 export const handler = async (
   event: APIGatewayProxyEvent
