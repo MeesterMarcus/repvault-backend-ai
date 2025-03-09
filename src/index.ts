@@ -1,6 +1,29 @@
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { ExerciseTemplate, predefinedExercises, VALID_CATEGORIES, VALID_EQUIPMENT, VALID_MUSCLE_GROUPS } from "./constants";
+import { predefinedExercises } from "./constants";
+
+// Define types for exercise and sets (if not already defined in your project)
+export interface SetTemplate {
+  id: string;
+  reps: string;
+  weight: string;
+}
+
+export interface ExerciseTemplate {
+  id: string;
+  name: string;
+  sets: SetTemplate[];
+  category: string;
+  muscleGroup: string[];
+  equipment: string;
+  description?: string;
+  imageUri?: string;
+}
+
+// Constants for validation.
+export const VALID_CATEGORIES = ['Strength', 'Cardio', 'Flexibility', 'Mobility'];
+export const VALID_MUSCLE_GROUPS = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core'];
+export const VALID_EQUIPMENT = ['Dumbbells', 'Barbell', 'Kettlebell', 'Bodyweight', 'Resistance Bands', 'Machines', 'Medicine Ball'];
 
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 const SECRET_ID = "prod/repvault-backend-ai/gemini-key";
@@ -12,7 +35,7 @@ interface ExtractionData {
   category: string;
 }
 
-// Define a type for the Gemini API response. You can adjust this if you have a more specific structure.
+// Define a type for the Gemini API response.
 type GeminiResponse = unknown;
 
 // Helper function to call Gemini API with a given prompt.
@@ -63,13 +86,14 @@ export const handler = async (
     const apiKey: string = secretObject.GeminiApiKeySecret;
 
     // STEP 1: Extract muscle groups, equipment, and category preference.
+    // The prompt now includes strict rules: only return valid values (from the provided arrays) in the JSON.
     const extractionPrompt = `
 Extract the main muscle groups, equipment preference, and category preference from the following prompt.
-Return a JSON object with three keys:
-  - "muscleGroups": an array of strings representing the muscle groups (choose from ${JSON.stringify(VALID_MUSCLE_GROUPS)}).
-  - "equipment": a string representing the equipment preference (choose one from ${JSON.stringify(VALID_EQUIPMENT)}).
-  - "category": a string representing the category preference (choose one from ${JSON.stringify(VALID_CATEGORIES)}).
-If a valid value is not mentioned, return an empty array for muscle groups or an empty string for equipment and category.
+Return a JSON object with exactly three keys: "muscleGroups", "equipment", and "category".
+  - "muscleGroups": Return an array of strings. Each string MUST be one of the following exactly: ${JSON.stringify(VALID_MUSCLE_GROUPS)}.
+  - "equipment": Return a string that MUST be exactly one of the following: ${JSON.stringify(VALID_EQUIPMENT)}. If none apply, return an empty string.
+  - "category": Return a string that MUST be exactly one of the following: ${JSON.stringify(VALID_CATEGORIES)}. If none apply, return an empty string.
+Do not include any additional keys or text. Strictly adhere to this schema.
 Prompt: "${humanPrompt}"
 `;
     const extractionResult = await callGemini(extractionPrompt, apiKey);
@@ -85,16 +109,21 @@ Prompt: "${humanPrompt}"
         extractionData = { muscleGroups: [], equipment: "", category: "" };
       }
     }
-    // Validate extracted values.
+    // Validate extracted muscle groups.
     extractionData.muscleGroups = Array.isArray(extractionData.muscleGroups)
       ? extractionData.muscleGroups.filter(mg => VALID_MUSCLE_GROUPS.includes(mg))
       : [];
-    extractionData.equipment = VALID_EQUIPMENT.includes(extractionData.equipment)
-      ? extractionData.equipment
-      : "";
-    extractionData.category = VALID_CATEGORIES.includes(extractionData.category)
-      ? extractionData.category
-      : "";
+
+    // Normalize and validate equipment.
+    const normalizedEquipment = extractionData.equipment.trim().toLowerCase();
+    extractionData.equipment =
+      VALID_EQUIPMENT.find(eq => eq.toLowerCase() === normalizedEquipment) || "";
+
+    // Normalize and validate category.
+    const normalizedCategory = extractionData.category.trim().toLowerCase();
+    extractionData.category =
+      VALID_CATEGORIES.find(cat => cat.toLowerCase() === normalizedCategory) || "";
+
     console.log("Extraction data:", extractionData);
 
     // STEP 2: Filter predefinedExercises based on extracted muscle groups, equipment, and category.
@@ -165,9 +194,9 @@ ${humanPrompt}
     // Assuming the AI returns an array of objects with "id" and "sets" fields.
     const outputArray: ExerciseTemplate[] = Array.isArray(workoutResult)
       ? workoutResult.map((ex: any) => ({
-        ...exerciseMap[ex.id],
-        sets: ex.sets,
-      }))
+          ...exerciseMap[ex.id],
+          sets: ex.sets,
+        }))
       : [];
 
     return {
