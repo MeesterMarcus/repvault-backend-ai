@@ -2,7 +2,7 @@ import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-sec
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { predefinedExercises } from "./constants";
 
-// Define types for exercise and sets (if not already defined in your project)
+// Define types for exercise and sets.
 export interface SetTemplate {
   id: string;
   reps: string;
@@ -53,6 +53,7 @@ async function callGemini(prompt: string, apiKey: string): Promise<GeminiRespons
     }),
   });
   const rawResponseText = await response.text();
+  console.log("Raw Gemini response text:", rawResponseText);
   if (!response.ok) {
     throw new Error(`Gemini API error: ${rawResponseText}`);
   }
@@ -86,7 +87,6 @@ export const handler = async (
     const apiKey: string = secretObject.GeminiApiKeySecret;
 
     // STEP 1: Extract muscle groups, equipment, and category preference.
-    // The prompt now includes strict rules: only return valid values (from the provided arrays) in the JSON.
     const extractionPrompt = `
 Extract the main muscle groups, equipment preference, and category preference from the following prompt.
 Return a JSON object with exactly three keys: "muscleGroups", "equipment", and "category".
@@ -96,35 +96,41 @@ Return a JSON object with exactly three keys: "muscleGroups", "equipment", and "
 Do not include any additional keys or text. Strictly adhere to this schema.
 Prompt: "${humanPrompt}"
 `;
+    console.log("Extraction prompt:", extractionPrompt);
     const extractionResult = await callGemini(extractionPrompt, apiKey);
+
+    console.log("Extraction raw result:", extractionResult);
+
     let extractionData: ExtractionData = { muscleGroups: [], equipment: "", category: "" };
 
-    // Handle the extraction result based on its structure.
     if (typeof extractionResult === "object" && extractionResult && "output" in extractionResult) {
       extractionData = (extractionResult as { output: ExtractionData }).output;
     } else {
       try {
         extractionData = JSON.parse(String(extractionResult));
       } catch (e) {
+        console.error("Error parsing extraction result:", e);
         extractionData = { muscleGroups: [], equipment: "", category: "" };
       }
     }
+
+    // Log extraction data before validation.
+    console.log("Extraction data before validation:", extractionData);
+
     // Validate extracted muscle groups.
     extractionData.muscleGroups = Array.isArray(extractionData.muscleGroups)
       ? extractionData.muscleGroups.filter(mg => VALID_MUSCLE_GROUPS.includes(mg))
       : [];
-
     // Normalize and validate equipment.
     const normalizedEquipment = extractionData.equipment.trim().toLowerCase();
     extractionData.equipment =
       VALID_EQUIPMENT.find(eq => eq.toLowerCase() === normalizedEquipment) || "";
-
     // Normalize and validate category.
     const normalizedCategory = extractionData.category.trim().toLowerCase();
     extractionData.category =
       VALID_CATEGORIES.find(cat => cat.toLowerCase() === normalizedCategory) || "";
 
-    console.log("Extraction data:", extractionData);
+    console.log("Validated extraction data:", extractionData);
 
     // STEP 2: Filter predefinedExercises based on extracted muscle groups, equipment, and category.
     let filteredExercises: ExerciseTemplate[] = predefinedExercises;
@@ -182,8 +188,10 @@ Do not include any additional text or explanation in your output.
 Now, based on the prompt below, construct and return an array of exercise objects that fits the requirements:
 ${humanPrompt}
 `;
+    console.log("Base prompt:", basePrompt);
     // STEP 4: Call Gemini to generate the workout routine.
     const workoutResult = await callGemini(basePrompt, apiKey);
+    console.log("Workout result:", workoutResult);
 
     // STEP 5: Map AI-generated exercise IDs back to the full exercise objects.
     const exerciseMap: Record<string, ExerciseTemplate> = predefinedExercises.reduce((acc, exercise) => {
@@ -191,7 +199,6 @@ ${humanPrompt}
       return acc;
     }, {} as Record<string, ExerciseTemplate>);
 
-    // Assuming the AI returns an array of objects with "id" and "sets" fields.
     const outputArray: ExerciseTemplate[] = Array.isArray(workoutResult)
       ? workoutResult.map((ex: any) => ({
           ...exerciseMap[ex.id],
