@@ -36,7 +36,16 @@ interface ExtractionData {
 }
 
 // Define a type for the Gemini API response.
-type GeminiResponse = unknown;
+type GeminiResponse = any;
+
+/**
+ * Helper function to remove markdown formatting and extract JSON text.
+ */
+function extractJsonFromCandidate(candidateText: string): string {
+  // Remove leading and trailing backticks and optional "json" hint.
+  // E.g., candidateText might be "```json\n[ ... ]\n```"
+  return candidateText.replace(/```(json)?/i, "").replace(/```/g, "").trim();
+}
 
 // Helper function to call Gemini API with a given prompt.
 async function callGemini(prompt: string, apiKey: string): Promise<GeminiResponse> {
@@ -62,6 +71,61 @@ async function callGemini(prompt: string, apiKey: string): Promise<GeminiRespons
   } catch (error) {
     throw new Error("Error parsing Gemini response JSON: " + error);
   }
+}
+
+/**
+ * Parse Gemini extraction result.
+ */
+function parseExtractionResult(result: GeminiResponse): ExtractionData {
+  let extractionData: ExtractionData = { muscleGroups: [], equipment: "", category: "" };
+  if (result?.candidates && result.candidates.length > 0) {
+    const candidateText = result.candidates[0]?.content?.parts[0]?.text;
+    if (candidateText) {
+      const cleanedText = extractJsonFromCandidate(candidateText);
+      try {
+        extractionData = JSON.parse(cleanedText);
+      } catch (e) {
+        console.error("Error parsing candidate text as JSON:", e);
+      }
+    }
+  } else if (typeof result === "object" && "output" in result) {
+    extractionData = result.output;
+  } else {
+    try {
+      extractionData = JSON.parse(String(result));
+    } catch (e) {
+      console.error("Error parsing result directly as JSON:", e);
+    }
+  }
+  return extractionData;
+}
+
+/**
+ * Parse Gemini workout result.
+ * We expect an array of exercise objects.
+ */
+function parseWorkoutResult(result: GeminiResponse): any[] {
+  let workoutArray: any[] = [];
+  if (result?.candidates && result.candidates.length > 0) {
+    const candidateText = result.candidates[0]?.content?.parts[0]?.text;
+    if (candidateText) {
+      const cleanedText = extractJsonFromCandidate(candidateText);
+      try {
+        workoutArray = JSON.parse(cleanedText);
+      } catch (e) {
+        console.error("Error parsing workout candidate text as JSON:", e);
+      }
+    }
+  } else if (Array.isArray(result)) {
+    workoutArray = result;
+  } else {
+    try {
+      workoutArray = JSON.parse(String(result));
+    } catch (e) {
+      console.error("Error parsing workout result directly as JSON:", e);
+    }
+  }
+  return workoutArray;
 }
 
 export const handler = async (
@@ -97,25 +161,10 @@ Do not include any additional keys or text. Strictly adhere to this schema.
 Prompt: "${humanPrompt}"
 `;
     console.log("Extraction prompt:", extractionPrompt);
-    const extractionResult = await callGemini(extractionPrompt, apiKey);
-
-    console.log("Extraction raw result:", extractionResult);
-
-    let extractionData: ExtractionData = { muscleGroups: [], equipment: "", category: "" };
-
-    if (typeof extractionResult === "object" && extractionResult && "output" in extractionResult) {
-      extractionData = (extractionResult as { output: ExtractionData }).output;
-    } else {
-      try {
-        extractionData = JSON.parse(String(extractionResult));
-      } catch (e) {
-        console.error("Error parsing extraction result:", e);
-        extractionData = { muscleGroups: [], equipment: "", category: "" };
-      }
-    }
-
-    // Log extraction data before validation.
-    console.log("Extraction data before validation:", extractionData);
+    const extractionResultRaw = await callGemini(extractionPrompt, apiKey);
+    console.log("Extraction raw result:", extractionResultRaw);
+    let extractionData = parseExtractionResult(extractionResultRaw);
+    console.log("Parsed extraction data before validation:", extractionData);
 
     // Validate extracted muscle groups.
     extractionData.muscleGroups = Array.isArray(extractionData.muscleGroups)
@@ -190,8 +239,10 @@ ${humanPrompt}
 `;
     console.log("Base prompt:", basePrompt);
     // STEP 4: Call Gemini to generate the workout routine.
-    const workoutResult = await callGemini(basePrompt, apiKey);
-    console.log("Workout result:", workoutResult);
+    const workoutResultRaw = await callGemini(basePrompt, apiKey);
+    console.log("Workout raw result:", workoutResultRaw);
+    const workoutResult = parseWorkoutResult(workoutResultRaw);
+    console.log("Parsed workout result:", workoutResult);
 
     // STEP 5: Map AI-generated exercise IDs back to the full exercise objects.
     const exerciseMap: Record<string, ExerciseTemplate> = predefinedExercises.reduce((acc, exercise) => {
