@@ -17,7 +17,7 @@ export interface ExerciseTemplate {
 
 export const VALID_CATEGORIES = ['Strength', 'Cardio', 'Flexibility', 'Mobility'];
 export const VALID_MUSCLE_GROUPS = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core'];
-export const VALID_EQUIPMENT = ['Dumbbells', 'Barbell', 'Kettlebell', 'Bodyweight', 'Resistance Bands', 'Machines', 'Medicine Ball'];
+export const VALID_EQUIPMENT = ['Dumbbells', 'Barbell', 'Kettlebell', 'Bodyweight', 'Resistance Bands', 'Machines', 'Medicine Ball', 'Other'];
 
 export const predefinedExercises: ExerciseTemplate[] = [
   {
@@ -522,6 +522,26 @@ export const predefinedExercises: ExerciseTemplate[] = [
     imageUri: 'Glute Bridge with Abduction bodyweight full hd.mp4'
   },
   {
+    id: 'barbell_wrist_curl',
+    name: 'Barbell Wrist Curl',
+    category: 'Arms',
+    muscleGroup: ['Forearms'],
+    equipment: 'Barbell',
+    sets: [],
+    description: 'Sit on a bench with forearms resting on your thighs, palms facing up, and curl the barbell upward using only your wrists, then lower slowly.',
+    imageUri: undefined
+  },
+  {
+    id: 'dumbbell_wrist_curl',
+    name: 'Dumbbell Wrist Curl',
+    category: 'Strength',
+    muscleGroup: ['Arms'],
+    equipment: 'Dumbbells',
+    sets: [],
+    description: 'Sit on a bench with forearms resting on your thighs, palms facing up, and curl the dumbbells upward using only your wrists, then lower slowly.',
+    imageUri: undefined
+  },
+  {
     id: 'hip_thrusts',
     name: 'Hip Thrusts',
     category: 'Strength',
@@ -622,7 +642,18 @@ export const predefinedExercises: ExerciseTemplate[] = [
     description: 'Stand in place and alternate raising your knees to your hips.',
     imageUri: ''
   },
+  {
+    id: 'wrist_roller',
+    name: 'Wrist Roller',
+    category: 'Strength',
+    muscleGroup: ['Arms'],
+    equipment: 'Other', // Assuming 'Other' is a valid equipment type for this
+    sets: [],
+    description: 'Hold a wrist roller with a weight attached by a rope, and twist your wrists to roll the weight up and down the rope.',
+    imageUri: undefined
+  },
 ];
+
 
 export const validatePredefinedExercises = () => {
   for (const exercise of predefinedExercises) {
