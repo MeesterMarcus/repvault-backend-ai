@@ -1,6 +1,8 @@
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { predefinedExercises } from "./constants";
+import { DynamoDBDocumentClient, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb"; // Add GetCommand
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 
 // Define types for exercise and sets.
 export interface SetTemplate {
@@ -8,6 +10,10 @@ export interface SetTemplate {
   reps: string;
   weight: string;
 }
+
+// Initialize DynamoDB DocumentClient
+const ddbClient = new DynamoDBClient({ region: "us-east-1" }); // Use your desired region
+const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
 
 export interface ExerciseTemplate {
   id: string;
@@ -27,6 +33,8 @@ export const VALID_EQUIPMENT = ['Dumbbells', 'Barbell', 'Kettlebell', 'Bodyweigh
 
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 const SECRET_ID = "prod/repvault-backend-ai/gemini-key";
+const USER_USAGE_TABLE_NAME = "UserUsageTable"; // Add this constant
+const MAX_REQUESTS_PER_USER = 10; // Define a simple limit
 
 // Define the expected structure for the extraction step.
 interface ExtractionData {
@@ -134,12 +142,63 @@ export const handler = async (
   try {
     const body = event.body ? JSON.parse(event.body) : {};
     const humanPrompt: string = body.prompt;
+    const userId: string | undefined = body.userId;
+
+    // Check for userId and enforce usage limits
+    if (!userId) {
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "Missing userId in request body." }),
+      };
+    }
+
+    try {
+      // Get current usage for the user
+      const getCommand = new GetCommand({
+        TableName: USER_USAGE_TABLE_NAME,
+        Key: { userId: userId },
+      });
+      const { Item } = await ddbDocClient.send(getCommand);
+      const currentUsage = Item ? Item.requestCount : 0;
+
+      if (currentUsage >= MAX_REQUESTS_PER_USER) {
+        console.log(`User ${userId} exceeded usage limit.`);
+        return {
+          statusCode: 429, // Too Many Requests
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: "Usage limit exceeded." }),
+        };
+      }
+
+      // Increment usage count
+      const updateCommand = new UpdateCommand({
+        TableName: USER_USAGE_TABLE_NAME,
+        Key: { userId: userId },
+        UpdateExpression: "SET requestCount = if_not_exists(requestCount, :start) + :inc",
+        ExpressionAttributeValues: {
+          ":start": 0,
+          ":inc": 1,
+        },
+        ReturnValues: "UPDATED_NEW",
+      });
+      await ddbDocClient.send(updateCommand);
+      console.log(`User ${userId} usage incremented. Current count: ${currentUsage + 1}`);
+
+    } catch (dbError: any) {
+      console.error("DynamoDB error:", dbError);
+      // Continue processing the request even if DB update fails, but log the error
+      // Depending on requirements, you might want to return a 500 here
+    }
+
     if (!humanPrompt) {
       return {
         statusCode: 400,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: "Missing prompt!" }),
       };
     }
+
     const secretsClient = new SecretsManagerClient({ region: "us-east-1" });
     const secretResponse = await secretsClient.send(
       new GetSecretValueCommand({ SecretId: SECRET_ID })
