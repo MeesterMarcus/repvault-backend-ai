@@ -11,7 +11,7 @@ export interface SetTemplate {
   weight: string;
 }
 
-// Initialize DynamoDB DocumentClient
+// Initialize DynamoDB DocumentClient.
 const ddbClient = new DynamoDBClient({ region: "us-east-1" }); // Use your desired region
 const ddbDocClient = DynamoDBDocumentClient.from(ddbClient);
 
