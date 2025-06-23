@@ -9,7 +9,7 @@ Resources:
     Properties:
       FunctionName: aiGeneratorFunction
       Handler: dist/index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs22.x
       CodeUri: ./dist/
       MemorySize: 128
       Timeout: 60
