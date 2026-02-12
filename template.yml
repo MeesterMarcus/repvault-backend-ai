@@ -13,6 +13,11 @@ Resources:
       CodeUri: ./dist/
       MemorySize: 128
       Timeout: 60
+      Environment:
+        Variables:
+          RATE_LIMIT_WINDOW_MS: "28800000"
+          FREE_USER_LIMIT: "2"
+          PREMIUM_USER_LIMIT: "25"
       Policies:
         - Version: "2012-10-17"
           Statement:
