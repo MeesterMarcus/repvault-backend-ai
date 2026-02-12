@@ -18,6 +18,8 @@ Resources:
           RATE_LIMIT_WINDOW_MS: "28800000"
           FREE_USER_LIMIT: "2"
           PREMIUM_USER_LIMIT: "25"
+          USER_PROFILE_TABLE_NAME: "UserProfileTable"
+          REQUIRE_COGNITO_AUTH: "false"
       Policies:
         - Version: "2012-10-17"
           Statement:
@@ -33,6 +35,10 @@ Resources:
                 - dynamodb:GetItem
                 - dynamodb:UpdateItem
               Resource: !GetAtt UserUsageTable.Arn
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+              Resource: !GetAtt UserProfileTable.Arn
 
   MyHttpApi:
     Type: AWS::Serverless::HttpApi
@@ -81,3 +87,15 @@ Resources:
         - AttributeName: userId
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST # Or ProvisionedThroughput if preferred
+
+  UserProfileTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: UserProfileTable
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST

@@ -6,6 +6,7 @@ import { getGeminiApiKey } from "./gemini";
 import { generateWorkoutInsights, validateInsightsPayload } from "./insights";
 import { logRequestSummary } from "./logging";
 import { enforceRateLimit } from "./rateLimit";
+import { resolveUserContext } from "./userTier";
 import { generateWorkoutTemplate } from "./workoutTemplate";
 import { GenerateRequestBody, GenerationType, InsightsPayload } from "./types";
 
@@ -42,17 +43,25 @@ export const handler = async (
     }
 
     const humanPrompt = body.prompt;
-    const userId = body.userId;
+    const bodyUserId = body.userId;
     const generationType = getGenerationType(body);
 
     generationTypeForLogging = generationType;
 
-    if (!userId || typeof userId !== "string" || userId.trim().length === 0) {
-      throw new ApiError(400, "INVALID_INPUT", "Missing required field: userId.");
-    }
     if (!humanPrompt || typeof humanPrompt !== "string" || humanPrompt.trim().length === 0) {
       throw new ApiError(400, "INVALID_INPUT", "Missing required field: prompt.");
     }
+
+    const userContext = await resolveUserContext(event, ddbDocClient, bodyUserId);
+    const userId = userContext.userId;
+    console.log(
+      JSON.stringify({
+        event: "user_context_resolved",
+        userId,
+        tier: userContext.tier,
+        tierSource: userContext.tierSource,
+      })
+    );
 
     let insightsPayload: InsightsPayload | undefined;
     if (generationType === "workout_insights") {
@@ -64,7 +73,7 @@ export const handler = async (
 
     userIdForLogging = userId;
 
-    await enforceRateLimit(ddbDocClient, userId);
+    await enforceRateLimit(ddbDocClient, userId, userContext.tier);
     const apiKey = await getGeminiApiKey();
 
     if (generationType === "workout_insights") {

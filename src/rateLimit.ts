@@ -8,28 +8,15 @@ import {
 } from "./config";
 import { SubscriptionTier, UserUsageItem } from "./types";
 
-function getSubscriptionTier(item?: UserUsageItem): SubscriptionTier {
-  if (!item) {
-    return "free";
-  }
-
-  if (item.isPremium === true) {
-    return "premium";
-  }
-
-  const premiumLabels = new Set(["premium", "pro", "plus", "paid"]);
-  const tierCandidates = [item.subscriptionTier, item.plan]
-    .filter((value): value is string => typeof value === "string")
-    .map((value) => value.trim().toLowerCase());
-
-  return tierCandidates.some((value) => premiumLabels.has(value)) ? "premium" : "free";
-}
-
 function getRequestLimitForTier(tier: SubscriptionTier): number {
   return tier === "premium" ? PREMIUM_USER_LIMIT : FREE_USER_LIMIT;
 }
 
-export async function enforceRateLimit(ddbDocClient: DynamoDBDocumentClient, userId: string): Promise<void> {
+export async function enforceRateLimit(
+  ddbDocClient: DynamoDBDocumentClient,
+  userId: string,
+  tier: SubscriptionTier
+): Promise<void> {
   const now = Date.now();
   const getCommand = new GetCommand({
     TableName: USER_USAGE_TABLE_NAME,
@@ -38,7 +25,6 @@ export async function enforceRateLimit(ddbDocClient: DynamoDBDocumentClient, use
 
   const { Item } = await ddbDocClient.send(getCommand);
   const usageItem = Item as UserUsageItem | undefined;
-  const tier = getSubscriptionTier(usageItem);
   const limit = getRequestLimitForTier(tier);
   const currentCount = usageItem?.requestCount ?? 0;
   const windowStart = usageItem?.windowStartEpochMs ?? 0;
@@ -49,7 +35,7 @@ export async function enforceRateLimit(ddbDocClient: DynamoDBDocumentClient, use
       TableName: USER_USAGE_TABLE_NAME,
       Key: { userId },
       UpdateExpression:
-        "SET requestCount = :count, windowStartEpochMs = :windowStart, subscriptionTier = if_not_exists(subscriptionTier, :tier)",
+        "SET requestCount = :count, windowStartEpochMs = :windowStart, subscriptionTier = :tier",
       ExpressionAttributeValues: {
         ":count": 1,
         ":windowStart": now,
