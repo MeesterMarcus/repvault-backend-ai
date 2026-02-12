@@ -34,6 +34,8 @@ export interface UserUsageItem {
   requestCount?: number;
   windowStartEpochMs?: number;
   subscriptionTier?: string;
+  plan?: string;
+  isPremium?: boolean;
 }
 
 export interface BestSet {

@@ -9,7 +9,20 @@ import {
 import { SubscriptionTier, UserUsageItem } from "./types";
 
 function getSubscriptionTier(item?: UserUsageItem): SubscriptionTier {
-  return item?.subscriptionTier === "premium" ? "premium" : "free";
+  if (!item) {
+    return "free";
+  }
+
+  if (item.isPremium === true) {
+    return "premium";
+  }
+
+  const premiumLabels = new Set(["premium", "pro", "plus", "paid"]);
+  const tierCandidates = [item.subscriptionTier, item.plan]
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim().toLowerCase());
+
+  return tierCandidates.some((value) => premiumLabels.has(value)) ? "premium" : "free";
 }
 
 function getRequestLimitForTier(tier: SubscriptionTier): number {
@@ -48,6 +61,18 @@ export async function enforceRateLimit(ddbDocClient: DynamoDBDocumentClient, use
   }
 
   if (currentCount >= limit) {
+    console.log(
+      JSON.stringify({
+        event: "rate_limit_exceeded",
+        userId,
+        tier,
+        limit,
+        currentCount,
+        windowStartEpochMs: windowStart,
+        nowEpochMs: now,
+        windowMs: RATE_LIMIT_WINDOW_MS,
+      })
+    );
     throw new ApiError(429, "RATE_LIMIT_EXCEEDED", "Rate limit exceeded for this 8-hour window.");
   }
 
