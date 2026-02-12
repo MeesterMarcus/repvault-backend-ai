@@ -148,7 +148,7 @@ export async function resolveUserContext(
     throw new ApiError(400, "INVALID_INPUT", "Missing required field: userId.");
   }
 
-  if (!authUserId && ALLOW_UNAUTH_PREMIUM_OVERRIDE) {
+  if (ALLOW_UNAUTH_PREMIUM_OVERRIDE) {
     const debugTier = getHeaderValue(event, "x-debug-tier");
     if (debugTier?.toLowerCase() === "premium") {
       return { userId, tier: "premium", tierSource: "unauth_override" };
