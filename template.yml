@@ -20,6 +20,7 @@ Resources:
           PREMIUM_USER_LIMIT: "25"
           USER_PROFILE_TABLE_NAME: "UserProfileTable"
           REQUIRE_COGNITO_AUTH: "false"
+          ALLOW_UNAUTH_PREMIUM_OVERRIDE: "false"
       Policies:
         - Version: "2012-10-17"
           Statement:

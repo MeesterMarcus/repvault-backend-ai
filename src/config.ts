@@ -31,3 +31,4 @@ export const RATE_LIMIT_WINDOW_MS = readPositiveIntEnv("RATE_LIMIT_WINDOW_MS", 8
 export const FREE_USER_LIMIT = readPositiveIntEnv("FREE_USER_LIMIT", 2);
 export const PREMIUM_USER_LIMIT = readPositiveIntEnv("PREMIUM_USER_LIMIT", 25);
 export const REQUIRE_COGNITO_AUTH = readBooleanEnv("REQUIRE_COGNITO_AUTH", false);
+export const ALLOW_UNAUTH_PREMIUM_OVERRIDE = readBooleanEnv("ALLOW_UNAUTH_PREMIUM_OVERRIDE", false);

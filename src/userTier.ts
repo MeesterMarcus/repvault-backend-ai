@@ -1,7 +1,11 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { ApiError } from "./api";
-import { REQUIRE_COGNITO_AUTH, USER_PROFILE_TABLE_NAME } from "./config";
+import {
+  ALLOW_UNAUTH_PREMIUM_OVERRIDE,
+  REQUIRE_COGNITO_AUTH,
+  USER_PROFILE_TABLE_NAME,
+} from "./config";
 import { SubscriptionTier } from "./types";
 
 interface UserProfileItem {
@@ -14,7 +18,7 @@ interface UserProfileItem {
 interface ResolvedUserContext {
   userId: string;
   tier: SubscriptionTier;
-  tierSource: "claims" | "profile_table" | "fallback_free";
+  tierSource: "claims" | "profile_table" | "unauth_override" | "fallback_free";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -56,6 +60,12 @@ function getClaimsFromEvent(event: APIGatewayProxyEvent): Record<string, unknown
     return legacyClaims;
   }
   return undefined;
+}
+
+function getHeaderValue(event: APIGatewayProxyEvent, name: string): string | undefined {
+  const entries = Object.entries(event.headers || {});
+  const match = entries.find(([key]) => key.toLowerCase() === name.toLowerCase());
+  return typeof match?.[1] === "string" ? match[1].trim() : undefined;
 }
 
 function getUserIdFromClaims(claims?: Record<string, unknown>): string | undefined {
@@ -136,6 +146,13 @@ export async function resolveUserContext(
   const userId = authUserId || bodyUserId;
   if (!userId || userId.trim().length === 0) {
     throw new ApiError(400, "INVALID_INPUT", "Missing required field: userId.");
+  }
+
+  if (!authUserId && ALLOW_UNAUTH_PREMIUM_OVERRIDE) {
+    const debugTier = getHeaderValue(event, "x-debug-tier");
+    if (debugTier?.toLowerCase() === "premium") {
+      return { userId, tier: "premium", tierSource: "unauth_override" };
+    }
   }
 
   const claimsTier = getTierFromClaims(claims);
