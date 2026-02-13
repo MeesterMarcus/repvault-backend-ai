@@ -34,12 +34,10 @@ export async function enforceRateLimit(
     const resetCommand = new UpdateCommand({
       TableName: USER_USAGE_TABLE_NAME,
       Key: { userId },
-      UpdateExpression:
-        "SET requestCount = :count, windowStartEpochMs = :windowStart, subscriptionTier = :tier",
+      UpdateExpression: "SET requestCount = :count, windowStartEpochMs = :windowStart",
       ExpressionAttributeValues: {
         ":count": 1,
         ":windowStart": now,
-        ":tier": tier,
       },
     });
     await ddbDocClient.send(resetCommand);
