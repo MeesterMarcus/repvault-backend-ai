@@ -124,6 +124,7 @@ export interface ExerciseTemplate {
     id: string;
     name: string;
     sets: SetTemplate[];
+    setTrackingType?: "duration";
     category: string;
     muscleGroup: string[];
     equipment: string;

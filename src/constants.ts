@@ -8,6 +8,7 @@ export interface ExerciseTemplate {
   id: string;
   name: string;
   sets: SetTemplate[];
+  setTrackingType?: 'duration';
   category: string;  // ✅ Should match one of VALID_CATEGORIES
   muscleGroup: string[];  // ✅ Should contain only values from VALID_MUSCLE_GROUPS
   equipment: string;  // ✅ Should match one of VALID_EQUIPMENT
@@ -386,6 +387,7 @@ export const predefinedExercises: ExerciseTemplate[] = [
     category: 'Strength',
     muscleGroup: ['Core'],
     equipment: 'Bodyweight',
+    setTrackingType: 'duration',
     sets: [],
     description: 'Assume a push-up position but rest on your forearms, keep your body in a straight line, and hold for the desired time.',
     imageUri: 'plank on elbows full hd.mp4'
@@ -406,6 +408,7 @@ export const predefinedExercises: ExerciseTemplate[] = [
     category: 'Cardio',
     muscleGroup: ['Core'],
     equipment: 'Bodyweight',
+    setTrackingType: 'duration',
     sets: [],
     description: 'Start in a push-up position, quickly drive your knees towards your chest one at a time, simulating a running motion while maintaining a strong core.',
     imageUri: 'mountain climbers full hd.mp4'
@@ -524,8 +527,8 @@ export const predefinedExercises: ExerciseTemplate[] = [
   {
     id: 'barbell_wrist_curl',
     name: 'Barbell Wrist Curl',
-    category: 'Arms',
-    muscleGroup: ['Forearms'],
+    category: 'Strength',
+    muscleGroup: ['Arms'],
     equipment: 'Barbell',
     sets: [],
     description: 'Sit on a bench with forearms resting on your thighs, palms facing up, and curl the barbell upward using only your wrists, then lower slowly.',
@@ -567,6 +570,7 @@ export const predefinedExercises: ExerciseTemplate[] = [
     category: 'Strength',
     muscleGroup: ['Core'],
     equipment: 'Bodyweight',
+    setTrackingType: 'duration',
     sets: [],
     description: 'Lie on your side, prop yourself up on your forearm, lift your hips to create a straight line, and hold for the desired duration.',
     imageUri: 'side plank full hd.mp4'
@@ -597,6 +601,7 @@ export const predefinedExercises: ExerciseTemplate[] = [
     category: 'Cardio',
     muscleGroup: ['Legs', 'Core'],
     equipment: 'Bodyweight',
+    setTrackingType: 'duration',
     sets: [],
     description: 'Stand upright, jump while spreading your legs and raising your arms overhead, then return to the starting position.',
     imageUri: 'jumping jack full hd.mp4'
@@ -627,6 +632,7 @@ export const predefinedExercises: ExerciseTemplate[] = [
     category: 'Strength',
     muscleGroup: ['Arms', 'Legs', 'Core'],
     equipment: 'Dumbbells',
+    setTrackingType: 'duration',
     sets: [],
     description: 'Hold a heavy dumbbell in each hand and walk a set distance while keeping your back straight and core engaged.',
     imageUri: 'Dumbell Farmer walks full hd.mp4'
@@ -638,6 +644,7 @@ export const predefinedExercises: ExerciseTemplate[] = [
     category: 'Cardio',
     muscleGroup: ['Legs'],
     equipment: 'Bodyweight',
+    setTrackingType: 'duration',
     sets: [],
     description: 'Stand in place and alternate raising your knees to your hips.',
     imageUri: ''

@@ -8,6 +8,7 @@ export interface ExerciseTemplate {
   id: string;
   name: string;
   sets: SetTemplate[];
+  setTrackingType?: "duration";
   category: string;
   muscleGroup: string[];
   equipment: string;
@@ -17,7 +18,7 @@ export interface ExerciseTemplate {
 
 export const VALID_CATEGORIES = ["Strength", "Cardio", "Flexibility", "Mobility"];
 export const VALID_MUSCLE_GROUPS = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Core"];
-export const VALID_EQUIPMENT = ["Dumbbells", "Barbell", "Kettlebell", "Bodyweight", "Resistance Bands", "Machines", "Medicine Ball"];
+export const VALID_EQUIPMENT = ["Dumbbells", "Barbell", "Kettlebell", "Bodyweight", "Resistance Bands", "Machines", "Medicine Ball", "Other"];
 
 export type GenerationType = "workout_template" | "workout_insights";
 export type SubscriptionTier = "free" | "premium";
