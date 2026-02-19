@@ -268,6 +268,8 @@ Rules:
 - One sentence each.
 - Practical and non-judgmental.
 - Include at least one recommendation for the next workout.
+- Ignore workout duration data entirely.
+- Do not give any advice about workout length, session time, minutes, or speed.
 - No markdown.
 - No preamble or explanation text.
 
