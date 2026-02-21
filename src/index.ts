@@ -24,6 +24,22 @@ function getGenerationType(body: GenerateRequestBody): GenerationType {
   throw new ApiError(400, "INVALID_GENERATION_TYPE", "generationType must be workout_template or workout_insights.");
 }
 
+function parseRequestBody(event: APIGatewayProxyEvent): GenerateRequestBody {
+  if (event.body === null || event.body === undefined) {
+    return {};
+  }
+
+  if (typeof event.body !== "string") {
+    if (typeof event.body === "object" && event.body !== null) {
+      return event.body as unknown as GenerateRequestBody;
+    }
+    throw new ApiError(400, "INVALID_JSON", "Request body must be valid JSON.");
+  }
+
+  const rawBody = event.isBase64Encoded ? Buffer.from(event.body, "base64").toString("utf-8") : event.body;
+  return JSON.parse(rawBody) as GenerateRequestBody;
+}
+
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
@@ -35,16 +51,30 @@ export const handler = async (
 
   try {
     let body: GenerateRequestBody = {};
-    if (event.body) {
-      try {
-        body = JSON.parse(event.body);
-      } catch {
-        throw new ApiError(400, "INVALID_JSON", "Request body must be valid JSON.");
-      }
+    try {
+      body = parseRequestBody(event);
+    } catch {
+      throw new ApiError(400, "INVALID_JSON", "Request body must be valid JSON.");
     }
+
+    console.log(
+      JSON.stringify({
+        event: "request_routing_debug",
+        rawBody: event.body,
+        isBase64Encoded: event.isBase64Encoded,
+        parsedBody: body,
+        parsedAction: body?.action ?? null,
+      })
+    );
 
     const telemetryResponse = await maybeHandleTelemetryAction(event, body, ddbDocClient);
     if (telemetryResponse) {
+      console.log(
+        JSON.stringify({
+          event: "request_routed_to_telemetry",
+          action: body.action,
+        })
+      );
       return telemetryResponse;
     }
 
