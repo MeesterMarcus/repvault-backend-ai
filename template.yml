@@ -19,6 +19,8 @@ Resources:
           FREE_USER_LIMIT: "2"
           PREMIUM_USER_LIMIT: "25"
           USER_PROFILE_TABLE_NAME: "UserProfileTable"
+          MIGRATION_STATUS_TABLE_NAME: "app_migration_status"
+          MIGRATION_STATUS_TTL_DAYS: "180"
           REQUIRE_COGNITO_AUTH: "false"
           ALLOW_UNAUTH_PREMIUM_OVERRIDE: "false"
       Policies:
@@ -40,6 +42,12 @@ Resources:
               Action:
                 - dynamodb:GetItem
               Resource: !GetAtt UserProfileTable.Arn
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+                - dynamodb:Scan
+              Resource: !GetAtt AppMigrationStatusTable.Arn
 
   MyHttpApi:
     Type: AWS::Serverless::HttpApi
@@ -66,8 +74,6 @@ Resources:
                   Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AiGeneratorFunction.Arn}/invocations
                 httpMethod: POST
                 type: aws_proxy
-              security:
-                - sigv4: []
 
   AiGeneratorFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -99,4 +105,19 @@ Resources:
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  AppMigrationStatusTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: app_migration_status
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
       BillingMode: PAY_PER_REQUEST

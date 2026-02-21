@@ -2,7 +2,7 @@
   "name": "repvault-backend-ai",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "yarn build && node --test \"dist/**/*.test.js\"",
     "build": "tsc",
     "dev": "tsc -w",
     "start": "yarn build && node dist/index.js"

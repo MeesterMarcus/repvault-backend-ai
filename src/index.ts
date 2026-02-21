@@ -5,6 +5,7 @@ import { ApiError, makeErrorResponse, makeResponse } from "./api";
 import { getGeminiApiKey } from "./gemini";
 import { generateWorkoutInsights, validateInsightsPayload } from "./insights";
 import { logRequestSummary } from "./logging";
+import { maybeHandleTelemetryAction } from "./migrationTelemetry";
 import { enforceRateLimit } from "./rateLimit";
 import { resolveUserContext } from "./userTier";
 import { generateWorkoutTemplate } from "./workoutTemplate";
@@ -40,6 +41,11 @@ export const handler = async (
       } catch {
         throw new ApiError(400, "INVALID_JSON", "Request body must be valid JSON.");
       }
+    }
+
+    const telemetryResponse = await maybeHandleTelemetryAction(event, body, ddbDocClient);
+    if (telemetryResponse) {
+      return telemetryResponse;
     }
 
     const humanPrompt = body.prompt;

@@ -21,13 +21,37 @@ export const VALID_MUSCLE_GROUPS = ["Chest", "Back", "Legs", "Shoulders", "Arms"
 export const VALID_EQUIPMENT = ["Dumbbells", "Barbell", "Kettlebell", "Bodyweight", "Resistance Bands", "Machines", "Medicine Ball", "Other"];
 
 export type GenerationType = "workout_template" | "workout_insights";
+export type RequestAction = "reportMigrationStatus" | "getMigrationStats";
 export type SubscriptionTier = "free" | "premium";
 
 export interface GenerateRequestBody {
+  action?: RequestAction;
   prompt?: string;
   userId?: string;
   generationType?: GenerationType;
   payload?: unknown;
+  installId?: string;
+  platform?: "ios" | "android";
+  appVersion?: string;
+  schemaVersion?: number;
+  latestSchemaVersion?: number;
+  timestamp?: string;
+  days?: number;
+}
+
+export interface ReportMigrationStatusRequest {
+  action: "reportMigrationStatus";
+  installId: string;
+  platform: "ios" | "android";
+  appVersion: string;
+  schemaVersion: number;
+  latestSchemaVersion: number;
+  timestamp: string;
+}
+
+export interface MigrationStatsRequest {
+  action: "getMigrationStats";
+  days: number;
 }
 
 export interface UserUsageItem {

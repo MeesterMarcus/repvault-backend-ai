@@ -2,6 +2,7 @@ export const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta
 export const SECRET_ID = "prod/repvault-backend-ai/gemini-key";
 export const USER_USAGE_TABLE_NAME = "UserUsageTable";
 export const USER_PROFILE_TABLE_NAME = process.env.USER_PROFILE_TABLE_NAME || "UserProfileTable";
+export const MIGRATION_STATUS_TABLE_NAME = process.env.MIGRATION_STATUS_TABLE_NAME || "app_migration_status";
 
 function readPositiveIntEnv(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -32,3 +33,4 @@ export const FREE_USER_LIMIT = readPositiveIntEnv("FREE_USER_LIMIT", 2);
 export const PREMIUM_USER_LIMIT = readPositiveIntEnv("PREMIUM_USER_LIMIT", 25);
 export const REQUIRE_COGNITO_AUTH = readBooleanEnv("REQUIRE_COGNITO_AUTH", false);
 export const ALLOW_UNAUTH_PREMIUM_OVERRIDE = readBooleanEnv("ALLOW_UNAUTH_PREMIUM_OVERRIDE", false);
+export const MIGRATION_STATUS_TTL_DAYS = readPositiveIntEnv("MIGRATION_STATUS_TTL_DAYS", 180);
