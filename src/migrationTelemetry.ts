@@ -194,8 +194,11 @@ export async function handleReportMigrationStatus(
         TableName: MIGRATION_STATUS_TABLE_NAME,
         Key: { pk: `INSTALL#${validated.installId}` },
         UpdateExpression:
-          "SET installId = :installId, userId = :userId, platform = :platform, appVersion = :appVersion, schemaVersion = :schemaVersion, latestSchemaVersion = :latestSchemaVersion, isGoodToGo = :isGoodToGo, lastSeenAt = :lastSeenAt, ttl = :ttl",
+          "SET installId = :installId, userId = :userId, platform = :platform, appVersion = :appVersion, schemaVersion = :schemaVersion, latestSchemaVersion = :latestSchemaVersion, isGoodToGo = :isGoodToGo, lastSeenAt = :lastSeenAt, #ttl = :ttl",
         ConditionExpression: "attribute_not_exists(lastSeenAt) OR :lastSeenAt > lastSeenAt",
+        ExpressionAttributeNames: {
+          "#ttl": "ttl",
+        },
         ExpressionAttributeValues: {
           ":installId": validated.installId,
           ":userId": userId,
